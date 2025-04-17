@@ -16,12 +16,18 @@ import chalk from 'chalk';
 dotenv.config();
 
 // Configure Anthropic client
+/*
 const anthropic = new Anthropic({
 	apiKey: process.env.ANTHROPIC_API_KEY,
 	// Add beta header for 128k token output
 	defaultHeaders: {
 		'anthropic-beta': 'output-128k-2025-02-19'
 	}
+});
+*/
+const anthropic = new OpenAI({
+	apiKey: process.env.ANTHROPIC_API_KEY,
+	baseURL: 'https://openrouter.ai/api/v1'
 });
 
 // Lazy-loaded Perplexity client
@@ -314,6 +320,7 @@ async function handleStreamingRequest(
 
 	try {
 		// Use streaming for handling large responses
+		/*
 		const stream = await (aiClient || anthropic).messages.create({
 			model:
 				modelConfig?.model || session?.env?.ANTHROPIC_MODEL || CONFIG.model,
@@ -325,6 +332,23 @@ async function handleStreamingRequest(
 				CONFIG.temperature,
 			system: systemPrompt,
 			messages: [
+				{
+					role: 'user',
+					content: `Here's the Product Requirements Document (PRD) to break down into ${numTasks} tasks:\n\n${prdContent}`
+				}
+			],
+			stream: true
+		});
+		*/
+		const stream = await (aiClient || anthropic).chat.completions.create({
+			model: modelConfig?.model || session?.env?.ANTHROPIC_MODEL || CONFIG.model,
+			max_tokens: modelConfig?.maxTokens || session?.env?.MAX_TOKENS || maxTokens,
+			temperature: modelConfig?.temperature || session?.env?.TEMPERATURE || CONFIG.temperature,
+			messages: [
+				{
+					role: 'system',
+					content: systemPrompt
+				},
 				{
 					role: 'user',
 					content: `Here's the Product Requirements Document (PRD) to break down into ${numTasks} tasks:\n\n${prdContent}`
@@ -347,9 +371,24 @@ async function handleStreamingRequest(
 		}
 
 		// Process the stream
+		/*
 		for await (const chunk of stream) {
 			if (chunk.type === 'content_block_delta' && chunk.delta.text) {
 				responseText += chunk.delta.text;
+			}
+			if (reportProgress) {
+				await reportProgress({
+					progress: (responseText.length / maxTokens) * 100
+				});
+			}
+			if (mcpLog) {
+				mcpLog.info(`Progress: ${(responseText.length / maxTokens) * 100}%`);
+			}
+		}
+		*/
+		for await (const chunk of stream) {
+			if (chunk.choices?.[0]?.delta?.content) {
+				responseText += chunk.choices[0].delta.content;
 			}
 			if (reportProgress) {
 				await reportProgress({
