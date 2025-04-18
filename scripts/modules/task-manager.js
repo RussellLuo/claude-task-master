@@ -134,7 +134,8 @@ async function parsePRD(
 			numTasks,
 			0,
 			{ reportProgress, mcpLog, session },
-			aiClient,
+			//aiClient,
+			null,
 			modelConfig
 		);
 

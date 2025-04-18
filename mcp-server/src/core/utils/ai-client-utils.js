@@ -89,10 +89,11 @@ export async function getPerplexityClientForMCP(session, log = console) {
  */
 export function getModelConfig(session, defaults = DEFAULT_MODEL_CONFIG) {
 	// Get values from session or fall back to defaults
+	const env = session?.env || process.env;
 	return {
-		model: session?.env?.MODEL || defaults.model,
-		maxTokens: parseInt(session?.env?.MAX_TOKENS || defaults.maxTokens),
-		temperature: parseFloat(session?.env?.TEMPERATURE || defaults.temperature)
+		model: env?.MODEL || defaults.model,
+		maxTokens: parseInt(env?.MAX_TOKENS || defaults.maxTokens),
+		temperature: parseFloat(env?.TEMPERATURE || defaults.temperature)
 	};
 }
 
